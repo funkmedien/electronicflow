@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <link rel="stylesheet" href="assets/css/loader.min.css">
+
+    <!--WebApp Basics-->
+    <meta name="apple-mobile-web-app-capable" content = "yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+</head>
+
+<body>
+<nav class="broadcastbar fixed-top">
+    <div class="container">
+        <div class="row no-gutters">
+            <div class="col-md-3 col-lg-2 d-flex d-md-block justify-content-center mb-2 mb-md-0">
+                <button type="button" class="player-button playbtn btn-floating"><i class="fas play-pause fa-play"></i></button>
+                <button type="button" class="mute-button mutebtn btn-floating"><i class="fas mute-unmute fa-volume-up"></i></button>
+                <div class="icon audio hidden">
+                    <i></i>
+                </div>
+            </div>
+            <div class="col-md-9 col-lg-10 d-flex align-items-center" id="nowplaying">
+                <div class="d-inline-block"><span id="api_lfm_display_name"></span>&nbsp;spielt:&nbsp;</div>
+                <div id="api_lfm_current_song1"></div>
+            </div>
+        </div>
+    </div>
+</nav>
+<!--Station Infos-->
+<div id="station" class="container" style="margin-top: 5rem;">
+	<div class="row">
+		<div class="col-md-3 mt-5 mt-md-4">
+			<img id="station_logo" class="station_logo z-depth-1-half img-fluid" alt="Station Logo"/>
+		</div>
+		<div class="col-md-5 mt-4 station_info_container" id="station_info">
+			<div class="station_details_container z-depth-1-half">
+				<h2 id="station_displayname"></h2>
+				<i><h5 id="station_slogan"></h5></i>
+				<i><p id="station_description"></p></i>
+				<div class="station_details_links">
+                    <a class="social-link link-lfm" id="lfm-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-headphones"></i></a>
+					<a class="social-link link-hp" id="hp-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-globe-europe"></i></a>
+					<a class="social-link link-fb" id="fb-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+					<a class="social-link link-tw" id="tw-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-twitter"></i></a>
+					<a class="social-link link-ig" id="ig-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                    <a class="social-link link-rss" id="rss-link" target="_blank" rel="external nofollow noopener noreferrer"><i class="fas fa-rss"></i></a>
+				</div>
+                <div class="btn-group btn_external" role="group" aria-label="Playlist Links">
+                    <a class="external_listening btn btn-sm btn-grey" id="radiode-link" rel="external nofollow noopener noreferrer">radio.de</a>
+                    <a class="external_listening btn btn-sm btn-grey" id="phonostar-link" rel="external nofollow noopener noreferrer">phonostar</a>
+                    <a class="external_listening btn btn-sm btn-grey" id="tunein-link" rel="external nofollow noopener noreferrer">tunein</a>
+                    <a class="external_listening btn btn-sm btn-grey" id="m3u-link" rel="external nofollow noopener noreferrer">M3U</a>
+                    <a class="external_listening btn btn-sm btn-grey" id="pls-link" rel="external nofollow noopener noreferrer">PLS</a>
+                </div>
+			</div>
+		</div>
+		<div class="col-md-4 mt-4 station_info_container" id="playlist_wrapper">
+			<div id="current_show" class="current_show_container z-depth-1-half mb-4">
+				<h4 id="show_start"></h4>
+				<h3 id="show_name"></h3>
+				<p id="show_description"></p>
+			</div>
+			<div id="next_show" class="current_show_container z-depth-1-half">
+				<h4 id="next_start"></h4>
+				<h3 id="next_name"></h3>
+				<p id="next_description"></p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Song history -->
+<div class="container" id="last_songs">
+    <div class="row">
+        <div class="col-12 mt-5 mt-md-4">
+            <h3>Letzte Songs:</h3>
+        </div>
+    </div>
+    <div id="song_row" class="row"></div>
+</div>
+
+<br/>
+
+<!-- Footer -->
+<footer class="page-footer font-small text-center">
+    <p style="color: #fff; padding-top: 15px; margin-bottom: 2px;">This station is powered by:</p>
+<a href="https://laut.fm/ac-plus" rel="external nofollow noopener noreferrer">
+    <img src="assets/img/lautfm.svg" class="filter-white" style="height: 40px; margin-bottom: 20px;" alt=""/>
+</a>
+</footer>
+<!-- Footer -->
+
+<audio class="live-player" id="audio"></audio>
+
+<script src="assets/js/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="assets/js/mdb/mdb.js"></script>
+<script src="assets/js/fontawesome/all.min.js"></script>
+<script src="assets/js/jquery.khan-shatyr.min.js"></script>
+<script src="assets/js/lfmplayer.js"></script>
+<script src="assets/js/tracklist.js"></script>
+<script>
+    /* =========================
+     *  $_GET vars and checks
+     * ========================= */
+    let station         = $_GET('station'),
+        color           = $_GET('color')            || '1ed9b4';
+
+    /* Boolean */
+    let badges          = $_GET('badges')           || true,
+        station_info    = $_GET('station_info')     || true,
+        current_show    = $_GET('current_show')     || true,
+        next_show       = $_GET('next_show')        || true,
+        history         = $_GET('history')          || true,
+        cover           = $_GET('cover')            || false,
+        autoplay        = $_GET('autoplay')         || false;
+
+    /* $_GET vars checks and translation */
+    (badges == 'true' || badges == 'false')             ? badges = (badges == 'true')               : badges = true;
+    (current_show == 'true' || current_show == 'false') ? current_show = (current_show == 'true')   : current_show = true;
+    (next_show == 'true' || next_show == 'false')       ? next_show = (next_show == 'true')         : next_show = true;
+    (station_info == 'true' || station_info == 'false') ? station_info = (station_info == 'true')   : station_info = true;
+    (history == 'true' || history == 'false')           ? history = (history == 'true')             : history = true;
+    (cover == 'true' || cover == 'false')               ? cover = (cover == 'true')                 : cover = false;
+    (autoplay == 'true' || autoplay == 'false')         ? autoplay = (autoplay == 'true')           : autoplay = false;
+
+
+    /* =========================
+     *  Other things
+     * ========================= */
+
+    /* Hide not wanted stuff from $_GET */
+    !current_show   && $('#current_show').hide();
+    !next_show      && $('#next_show').hide();
+    !station_info   && $(function () {$('#station').hide(); $('#last_songs').css("margin-top", "5rem")});
+    !history        && $('#last_songs').hide();
+
+    if (!current_show && !next_show) {
+        $("#playlist_wrapper").addClass("d-none");
+        $("#station_info").removeClass("col-md-5").addClass("col-md-9");
+    }
+
+    let root = document.documentElement,
+        sender = station.toUpperCase(),
+        last_song_data_cache,
+        song_str;
+    root.style.setProperty('--main-color', '#' + color);
+    !station && $("#api_lfm_current_song1").html("<b>No Station Name given</b>");
+
+    function cycle() {
+        setTimeout(function () {
+            history && load_last_song(station);
+            $('[data-toggle="popover"]').popover({trigger: 'focus'});
+            getSong(station);
+            crawlePlaylist(station);
+            cycle();
+        }, 2000);
+    }
+
+    $(document).ready(function () {
+        audiobtn(autoplay, station);
+        history && load_last_songs_fully(station);
+        crawleLautApi(station);
+        getSong(station);
+        getWidth();
+        $("#api_lfm_current_song1").khanShatyr({delay: 2000, pause: 300, max_kerning: -0.05}).css('color', 'white');
+        cycle();
+    });
+</script>
+
+<script type="text/template" id="song_detailed">
+    <div class="col-md-4">
+        <div class="last_song d-flex z-depth-1-half">
+            <span class="track_nr">{{track_nr}}</span>
+            <div class="song_wrapper">
+                <h4 class="last_text last_artist">
+                    {{artist}}
+                </h4>
+                <p class="last_text last_title">
+                    {{title}}
+                </p>
+            </div>
+            <div class="last_btn">
+                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{artist}}" data-content="{{title}}">
+                    <i class="fas fa-ellipsis-h"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</script>
+<script type="text/template" id="song_detailed_cover">
+    <div class="col-md-4">
+        <div class="last_song d-flex z-depth-1-half">
+            <span class="cover"><img src="{{cover}}" alt=""></span>
+            <div class="song_wrapper">
+                <h4 class="last_text last_artist">
+                    {{artist}}
+                </h4>
+                <p class="last_text last_title">
+                    {{title}}
+                </p>
+            </div>
+            <div class="last_btn">
+                <a tabindex="0" role="button" data-toggle="popover" data-trigger="focus" title="{{artist}}" data-content="{{title}}">
+                    <i class="fas fa-ellipsis-h"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</script>
+</body>
+</html>
